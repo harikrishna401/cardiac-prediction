@@ -1,0 +1,100 @@
+# MODULE 3 : CARDIAC RISK PREDICTION (FINAL CLEAN VERSION)
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+
+# -------------------------------
+# SAMPLE DATASET
+# -------------------------------
+data = {
+    "Age":[45,50,36,60,55,48,39,65,52,47],
+    "Gender":["Male","Male","Female","Male","Female","Male","Female","Male","Male","Female"],
+    "BP":[130,140,120,150,135,128,118,160,142,125],
+    "Diabetes":["Yes","No","No","Yes","Yes","No","No","Yes","Yes","No"],
+    "Smoking":["Yes","Yes","No","Yes","No","Yes","No","Yes","Yes","No"],
+    "ECG_Result":["Abnormal","Normal","Normal","Abnormal","Abnormal","Normal","Normal","Abnormal","Abnormal","Normal"],
+    "Cholesterol":[230,250,180,270,240,210,190,290,260,200],
+    "Risk":[1,1,0,1,1,0,0,1,1,0]
+}
+
+df = pd.DataFrame(data)
+
+# -------------------------------
+# ENCODING
+# -------------------------------
+le = LabelEncoder()
+
+for col in ["Gender","Diabetes","Smoking","ECG_Result"]:
+    df[col] = le.fit_transform(df[col])
+
+X = df.drop("Risk", axis=1)
+y = df["Risk"]
+
+# -------------------------------
+# SPLIT
+# -------------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# -------------------------------
+# MODEL
+# -------------------------------
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+# -------------------------------
+# USER INPUT
+# -------------------------------
+print("\n----- Enter Patient Details -----")
+
+age = int(input("Age: "))
+gender = input("Gender (Male/Female): ")
+bp = int(input("Blood Pressure: "))
+diabetes = input("Diabetes (Yes/No): ")
+smoking = input("Smoking (Yes/No): ")
+ecg = input("ECG Result (Normal/Abnormal): ")
+chol = int(input("Cholesterol Level: "))
+
+# -------------------------------
+# ENCODE INPUT
+# -------------------------------
+gender = 1 if gender.lower()=="male" else 0
+diabetes = 1 if diabetes.lower()=="yes" else 0
+smoking = 1 if smoking.lower()=="yes" else 0
+ecg = 1 if ecg.lower()=="abnormal" else 0
+
+input_data = np.array([[age, gender, bp, diabetes, smoking, ecg, chol]])
+
+# -------------------------------
+# PREDICTION
+# -------------------------------
+prob = model.predict_proba(input_data)[0][1]
+
+# -------------------------------
+# RISK LOGIC
+# -------------------------------
+if prob < 0.33:
+    risk = "LOW"
+    action = "Regular Checkup"
+    follow = "No"
+elif prob < 0.66:
+    risk = "MEDIUM"
+    action = "Consult Cardiologist"
+    follow = "Yes"
+else:
+    risk = "HIGH"
+    action = "Immediate Medical Attention"
+    follow = "Yes"
+
+# -------------------------------
+# OUTPUT
+# -------------------------------
+print("\n------ CARDIAC RISK RESULT ------")
+print("Risk Level :", risk)
+print("Probability :", round(prob*100,2), "%")
+print("Suggested Action :", action)
+print("Follow-up Required :", follow)
